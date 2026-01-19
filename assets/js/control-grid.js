@@ -14,18 +14,99 @@
                 lineWidth: 1
             };
 
+            this.isEditor = window.elementorGridControl && window.elementorGridControl.isEditor;
+            this.isFrontend = window.elementorGridControl && window.elementorGridControl.isFrontend;
+            this.initialized = false;
+
             this.init();
         }
 
         init() {
-            // Wait for Elementor to be fully loaded
+            if (this.isEditor) {
+                // Elementor Editor Mode
+                this.initEditor();
+            } else if (this.isFrontend) {
+                // Frontend Mode
+                this.initFrontend();
+            }
+        }
+
+        initEditor() {
+            // Try multiple methods to ensure compatibility
+            const tryInit = () => {
+                if (this.initialized) return;
+
+                // Method 1: Wait for elementor fully loaded
+                if (window.elementor && window.elementor.on) {
+                    console.log('Elementor Grid: Initializing via elementor.on');
+                    this.createGridIcon();
+                    this.loadSettings();
+                    this.initialized = true;
+                    return;
+                }
+
+                // Method 2: Wait for jQuery and try again
+                if (typeof $ !== 'undefined' && $('#elementor-preview-iframe').length > 0) {
+                    console.log('Elementor Grid: Initializing via iframe detection');
+                    this.createGridIcon();
+                    this.loadSettings();
+                    this.initialized = true;
+                    return;
+                }
+            };
+
+            // Try immediately
+            $(document).ready(() => {
+                tryInit();
+            });
+
+            // Try with elementor:init event
             $(window).on('elementor:init', () => {
-                this.createGridIcon();
+                console.log('Elementor Grid: elementor:init event fired');
+                tryInit();
+            });
+
+            // Fallback: Try after a delay
+            setTimeout(() => {
+                tryInit();
+            }, 1000);
+
+            // Final fallback: Try after longer delay
+            setTimeout(() => {
+                tryInit();
+            }, 3000);
+        }
+
+        initFrontend() {
+            $(document).ready(() => {
+                // Hook into admin bar item
+                $('#wp-admin-bar-elementor-grid-control a').on('click', (e) => {
+                    e.preventDefault();
+                    if (!this.initialized) {
+                        this.createGridIcon();
+                        this.loadSettings();
+                        this.initialized = true;
+                    }
+                    this.toggleModal();
+                });
+
+                // Auto-initialize if grid was enabled before
                 this.loadSettings();
+                if (this.settings.enabled) {
+                    this.createGridIcon();
+                    this.initialized = true;
+                    this.updateGrid();
+                }
             });
         }
 
         createGridIcon() {
+            // Check if icon already exists
+            if ($('#elementor-grid-control-icon').length > 0) {
+                console.log('Elementor Grid: Icon already exists');
+                return;
+            }
+
             const $icon = $(`
                 <div id="elementor-grid-control-icon" class="elementor-grid-control-icon" title="Grid Overlay">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -37,8 +118,15 @@
                 </div>
             `);
 
-            // Add icon to Elementor panel
-            $('#elementor-panel-footer-tools').prepend($icon);
+            // Try to add to Elementor panel footer first
+            if ($('#elementor-panel-footer-tools').length > 0) {
+                console.log('Elementor Grid: Adding icon to panel footer');
+                $('#elementor-panel-footer-tools').prepend($icon);
+            } else {
+                // Fallback: Add as floating button
+                console.log('Elementor Grid: Adding icon as floating button');
+                $('body').append($icon);
+            }
 
             // Create modal
             this.createModal();
@@ -48,9 +136,16 @@
                 e.stopPropagation();
                 this.toggleModal();
             });
+
+            console.log('Elementor Grid: Icon created successfully');
         }
 
         createModal() {
+            // Check if modal already exists
+            if ($('#elementor-grid-control-modal').length > 0) {
+                return;
+            }
+
             const $modal = $(`
                 <div id="elementor-grid-control-modal" class="elementor-grid-control-modal">
                     <div class="elementor-grid-control-modal-content">
@@ -199,8 +294,21 @@
         }
 
         createGrid() {
-            const $preview = $('#elementor-preview-iframe').contents();
-            const $body = $preview.find('body');
+            let $target;
+
+            if (this.isEditor) {
+                // In editor, target the preview iframe
+                const $preview = $('#elementor-preview-iframe');
+                if ($preview.length > 0) {
+                    $target = $preview.contents().find('body');
+                } else {
+                    console.error('Elementor Grid: Preview iframe not found');
+                    return;
+                }
+            } else {
+                // In frontend, target the body directly
+                $target = $('body');
+            }
 
             // Create canvas for grid
             const canvas = document.createElement('canvas');
@@ -213,20 +321,28 @@
             canvas.style.pointerEvents = 'none';
             canvas.style.zIndex = '999999';
 
-            $body.append(canvas);
+            $target.append(canvas);
 
             this.drawGrid(canvas);
 
             // Redraw on window resize
-            $(window).off('resize.gridControl').on('resize.gridControl', () => {
-                this.drawGrid(canvas);
-            });
+            const resizeHandler = () => this.drawGrid(canvas);
+            $(window).off('resize.gridControl').on('resize.gridControl', resizeHandler);
+
+            console.log('Elementor Grid: Grid created successfully');
         }
 
         drawGrid(canvas) {
-            const $preview = $('#elementor-preview-iframe').contents();
-            const width = $preview.width();
-            const height = $preview.height();
+            let width, height;
+
+            if (this.isEditor) {
+                const $preview = $('#elementor-preview-iframe').contents();
+                width = $preview.width();
+                height = $preview.height();
+            } else {
+                width = $(window).width();
+                height = $(document).height();
+            }
 
             canvas.width = width;
             canvas.height = height;
@@ -265,20 +381,26 @@
         }
 
         removeGrid() {
-            const $preview = $('#elementor-preview-iframe').contents();
-            $preview.find('#elementor-grid-overlay').remove();
+            if (this.isEditor) {
+                const $preview = $('#elementor-preview-iframe').contents();
+                $preview.find('#elementor-grid-overlay').remove();
+            } else {
+                $('#elementor-grid-overlay').remove();
+            }
             $(window).off('resize.gridControl');
         }
 
         saveSettings() {
             localStorage.setItem('elementor-grid-control-settings', JSON.stringify(this.settings));
+            console.log('Elementor Grid: Settings saved', this.settings);
         }
 
         loadSettings() {
             const saved = localStorage.getItem('elementor-grid-control-settings');
             if (saved) {
                 this.settings = { ...this.settings, ...JSON.parse(saved) };
-                if (this.settings.enabled) {
+                console.log('Elementor Grid: Settings loaded', this.settings);
+                if (this.settings.enabled && this.initialized) {
                     this.updateGrid();
                 }
             }
