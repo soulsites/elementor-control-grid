@@ -1,10 +1,11 @@
 # Elementor Control Grid
 
-Ein WordPress-Plugin für Elementor, das ein Grid-Overlay-System im Live-Editor hinzufügt.
+Ein WordPress-Plugin für Elementor, das ein Grid-Overlay-System im Live-Editor und Frontend hinzufügt.
 
 ## Features
 
 - **Grid-Icon im Elementor Editor**: Icon erscheint unten rechts im Elementor Live-Editor
+- **Frontend-Support**: Eingeloggte User können das Grid auch im Frontend über die Admin Bar aktivieren
 - **Anpassbares Modal**: Einstellungen können über ein übersichtliches Modal gesteuert werden
 - **Flexible Grid-Einstellungen**:
   - Anzahl der Zeilen (Rows)
@@ -25,6 +26,8 @@ Ein WordPress-Plugin für Elementor, das ein Grid-Overlay-System im Live-Editor 
 
 ## Verwendung
 
+### Im Elementor Editor
+
 1. **Grid aktivieren**: Klicke auf das Grid-Icon (unten rechts im Elementor-Editor)
 2. **Einstellungen anpassen**: Im Modal kannst du folgende Einstellungen vornehmen:
    - Aktiviere/Deaktiviere das Grid mit der Checkbox "Grid aktivieren"
@@ -36,6 +39,12 @@ Ein WordPress-Plugin für Elementor, das ein Grid-Overlay-System im Live-Editor 
    - Wähle zwischen "Fixed" (bleibt beim Scrollen) oder "Absolute" (scrollt mit)
 3. **Anwenden**: Klicke auf "Anwenden" um die Einstellungen zu speichern
 4. **Zurücksetzen**: Klicke auf "Zurücksetzen" um die Standardeinstellungen wiederherzustellen
+
+### Im Frontend (für eingeloggte User)
+
+1. Wenn du als eingeloggter User die Website besuchst, siehst du ein "Grid Overlay" Icon in der Admin Bar (oben)
+2. Klicke auf das Icon, um die Grid-Einstellungen zu öffnen
+3. Das Grid wird auch im Frontend angezeigt und die Einstellungen bleiben synchronisiert mit dem Editor
 
 ## Technische Details
 
@@ -69,6 +78,29 @@ Das Grid-Overlay wird als Canvas-Element über die Elementor-Preview gelegt und 
 
 ### Persistenz
 Alle Einstellungen werden im LocalStorage des Browsers gespeichert und beim nächsten Öffnen des Editors automatisch wiederhergestellt.
+
+## Fehlerbehebung
+
+### Grid erscheint nicht im Elementor Editor
+
+Das Plugin nutzt mehrere Initialisierungs-Methoden für maximale Kompatibilität:
+
+1. **Console-Logs prüfen**: Öffne die Browser-Konsole (F12) und suche nach "Elementor Grid" Meldungen
+2. **Icon-Position**: Das Icon sollte unten rechts erscheinen. Falls nicht, prüfe ob andere Plugins die Position blockieren
+3. **Browser-Cache**: Leere den Browser-Cache und lade die Seite neu (Strg+F5)
+4. **Elementor-Version**: Das Plugin ist mit Elementor 3.0+ kompatibel
+
+### Grid erscheint nicht im Frontend
+
+1. **Einloggen**: Du musst als WordPress-User eingeloggt sein
+2. **Admin Bar**: Die WordPress Admin Bar muss aktiviert sein
+3. **Aktivierung**: Klicke auf "Grid Overlay" in der Admin Bar und aktiviere das Grid im Modal
+
+### Einstellungen werden nicht gespeichert
+
+- Das Plugin nutzt den LocalStorage des Browsers
+- Stelle sicher, dass LocalStorage in deinem Browser aktiviert ist
+- Private/Inkognito-Modus kann LocalStorage blockieren
 
 ## Entwicklung
 

@@ -267,3 +267,37 @@
 #elementor-grid-overlay {
     pointer-events: none;
 }
+
+/* Admin Bar Styling */
+#wpadminbar #wp-admin-bar-elementor-grid-control .ab-icon:before {
+    content: "\f545";
+    top: 2px;
+}
+
+#wpadminbar #wp-admin-bar-elementor-grid-control .ab-icon {
+    font: normal 20px/1 dashicons;
+    speak: never;
+}
+
+/* Frontend adjustments when admin bar is present */
+body.admin-bar .elementor-grid-control-icon {
+    bottom: 20px;
+}
+
+/* Ensure proper z-index hierarchy */
+.elementor-grid-control-modal {
+    z-index: 999999 !important;
+}
+
+#elementor-grid-overlay {
+    z-index: 999998 !important;
+}
+
+.elementor-grid-control-icon {
+    z-index: 99999 !important;
+}
+
+/* Better visibility in editor */
+#elementor-editor-wrapper .elementor-grid-control-icon {
+    position: fixed;
+}
